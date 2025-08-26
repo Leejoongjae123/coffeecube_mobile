@@ -69,7 +69,7 @@ export default function SearchClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <div className="relative bg-white h-screen w-full overflow-y-auto">
+    <div className="relative bg-white h-screen w-full">
       <MapArea />
 
       <SearchInputButton onOpen={() => setIsModalOpen(true)} />
