@@ -26,14 +26,25 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+      <body className={`${geistSans.className} antialiased lg:bg-[url('/bg.webp')] lg:bg-cover lg:bg-center lg:bg-no-repeat lg:min-h-screen relative`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          {/* 배경 카피 텍스트 - 데스크톱에서만 표시 */}
+          <div className="hidden lg:block absolute right-[calc(50%+180px+5%)] top-1/2 transform -translate-y-1/2 z-0 flex">
+            <div className="text-white dark:text-gray-300 leading-relaxed text-end">
+              <p className="text-[32px] font-medium ">더 많은곳에서의</p>
+              <p className="text-[32px] font-semibold mb-2">창조와 환경, 그 이상의 실천</p>
+              <p className="text-[16px]">환경을 위한 제품을 만드는 회사와 개인을 응원합니다.</p>
+            </div>
+          </div>
+          
+          <div className="w-full lg:w-[360px] lg:mx-auto relative z-10">
+            {children}
+          </div>
         </ThemeProvider>
       </body>
     </html>
