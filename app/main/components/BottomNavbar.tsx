@@ -81,12 +81,12 @@ function BottomNavbarContent() {
           <button
             key={item.path}
             onClick={() => handleNavigation(item.path)}
-            className={`flex flex-col justify-center items-center rounded-lg min-h-[60px] w-[60px] gap-y-[2px] transition-colors ${
+            className={`flex flex-col justify-center items-center rounded-lg min-h-[60px] w-[60px] gap-y-[2px] transition-colors duration-200 ${
               isActive ? "text-green-600" : "text-neutral-400 hover:text-green-500"
             }`}
           >
             <IconComponent 
-              fill={isActive ? "currentColor" : "currentColor"} 
+              fill="currentColor"
               className="transition-colors duration-200" 
             />
             <div className="text-[10px] transition-colors duration-200">{item.label}</div>
