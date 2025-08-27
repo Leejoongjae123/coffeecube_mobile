@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  darkMode: ["class"],
+
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -51,6 +51,14 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+      },
+      textColor: {
+        primary: "hsl(var(--primary))",
+        secondary: "hsl(var(--secondary))",
+        muted: "hsl(var(--muted-foreground))",
+        accent: "hsl(var(--accent))",
+        destructive: "hsl(var(--destructive))",
+        foreground: "hsl(var(--foreground))",
       },
       borderRadius: {
         lg: "var(--radius)",

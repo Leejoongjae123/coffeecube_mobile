@@ -8,9 +8,9 @@ interface StatusTableProps {
 
 export default function StatusTable({ rows }: StatusTableProps) {
   return (
-    <div className="mt-5 w-full font-medium text-stone-500 max-h-[calc(100vh-200px)] overflow-y-auto">
+    <div className="mt-5 w-full font-medium text-stone-500 max-h-[calc(100vh-200px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       <div className="flex justify-between items-center px-2 w-full font-bold whitespace-nowrap rounded bg-zinc-100 text-neutral-600 sticky top-0 z-10">
-        <div className="flex gap-2.5 justify-center items-center self-stretch py-4 pr-2.5 pl-2.5 my-auto w-10">
+        <div className="flex gap-2.5 justify-center items-center self-stretch py-4 pr-2.5 pl-2.5 my-auto w-[74px]">
           <div className="self-stretch my-auto">일자</div>
         </div>
         <div className="flex flex-1 shrink gap-2.5 justify-center items-center self-stretch px-2.5 py-4 my-auto basis-0">
@@ -26,11 +26,11 @@ export default function StatusTable({ rows }: StatusTableProps) {
 
       {rows.map((item, index) => (
         <div key={index} className="flex justify-between items-center px-2 w-full rounded border-b border-gray-100 hover:bg-gray-50 transition-colors">
-          <div className="flex gap-2.5 justify-center items-center self-stretch py-4 my-auto w-10">
+          <div className="flex gap-2.5 justify-center items-center self-stretch py-4 my-auto w-[74px]">
             <div className="self-stretch my-auto truncate">{item.date}</div>
           </div>
-          <div className="flex flex-1 shrink gap-2.5 justify-center items-center self-stretch px-2.5 py-4 my-auto basis-0 min-w-0">
-            <div className="self-stretch my-auto truncate">{item.location}</div>
+          <div className="flex flex-1 shrink gap-2.5 justify-center items-start self-stretch px-2.5 py-4 my-auto basis-0 min-w-0">
+            <div className="w-full break-words whitespace-pre-wrap text-center">{item.location}</div>
           </div>
           <div className="flex gap-2.5 justify-center items-center self-stretch px-2.5 py-4 my-auto w-10 whitespace-nowrap">
             <div className="self-stretch my-auto font-bold text-green-600">{item.amount}</div>

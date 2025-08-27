@@ -69,11 +69,14 @@ function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showResults, setShowResults] = React.useState(false);
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
-    <div className="fixed inset-0 z-50 bg-stone-50 h-screen w-full">
-      <div className="box-border flex flex-col gap-5 items-end self-stretch p-5 bg-stone-50 h-full w-full ">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 lg:flex lg:justify-center">
+      <div className="bg-stone-50 h-screen w-full lg:w-[360px] lg:mx-auto">
+        <div className="box-border flex flex-col gap-5 items-end self-stretch p-5 bg-stone-50 h-full w-full ">
         <div className="flex relative justify-between items-start self-stretch">
           <div className="flex relative gap-2.5 items-center">
             <button
@@ -151,7 +154,7 @@ function SearchModal({ isOpen, onClose }: SearchModalProps) {
                             {result.installDate} 설치
                           </div>
                         </div>
-                        <div className="text-base text-zinc-900 max-sm:text-sm">
+                        <div className="text-base text-zinc-900 max-sm:text-sm w-full">
                           {result.address}
                         </div>
                       </div>
@@ -172,54 +175,55 @@ function SearchModal({ isOpen, onClose }: SearchModalProps) {
               </div>
               
               <div className="flex relative justify-between items-center self-stretch">
-                <div className="flex relative gap-2 items-center">
-                  <div className="flex relative gap-2.5 justify-center items-center px-2 py-1.5 bg-green-600 rounded-[100px]">
+                <div className="flex relative items-center flex-1">
+                  <div className="flex relative gap-2.5 justify-center items-center bg-primary rounded-[100px] w-[37px] h-[26px] flex-shrink-0">
                     <div className="relative text-xs font-bold text-center text-white">
                       주소
                     </div>
                   </div>
-                  <div className="relative text-base text-neutral-700 max-sm:text-sm">
+                  <div className="relative text-base text-neutral-700 text-[16px] flex-1 ml-2">
                     경기도 시흥시 시청로 20 (장현동)
                   </div>
                 </div>
-                <div className="relative text-xs text-center text-zinc-600">
+                <div className="relative text-[10px] text-center text-zinc-600 flex-shrink-0 ml-2">
                   2025.08.21
                 </div>
               </div>
               
               <div className="flex relative justify-between items-center self-stretch">
-                <div className="flex relative gap-2 items-center">
-                  <div className="flex relative gap-2.5 justify-center items-center px-2 py-1.5 bg-green-600 rounded-[100px]">
+                <div className="flex relative items-center flex-1">
+                  <div className="flex relative gap-2.5 justify-center items-center bg-primary rounded-[100px] w-[37px] h-[26px] flex-shrink-0">
                     <div className="relative text-xs font-bold text-center text-white">
                       주소
                     </div>
                   </div>
-                  <div className="relative text-base text-neutral-700 max-sm:text-sm">
+                  <div className="relative text-base text-neutral-700 text-[16px] flex-1 ml-2">
                     경기도 시흥시 시청로 20 (장현동)
                   </div>
                 </div>
-                <div className="relative text-xs text-center text-zinc-600">
+                <div className="relative text-[10px] text-center text-zinc-600 flex-shrink-0 ml-2">
                   2025.08.21
                 </div>
               </div>
               
               <div className="flex relative justify-between items-center self-stretch">
-                <div className="flex relative gap-2 items-center">
-                  <div className="flex relative gap-2.5 justify-center items-center px-2 py-1.5 bg-white border border-green-600 border-solid rounded-[100px]">
-                    <div className="relative text-xs font-bold text-center text-green-600">
+                <div className="flex relative items-center flex-1">
+                  <div className="flex relative gap-2.5 justify-center items-center border border-primary text-primary rounded-[100px] w-[37px] h-[26px] flex-shrink-0">
+                    <div className="relative text-xs font-bold text-center text-primary">
                       코드
                     </div>
                   </div>
-                  <div className="relative text-base text-neutral-700 max-sm:text-sm">
+                  <div className="relative text-base text-neutral-700 text-[16px] flex-1 ml-2">
                     asdfghjkl001
                   </div>
                 </div>
-                <div className="relative text-xs text-center text-zinc-600">
+                <div className="relative text-[10px] text-center text-zinc-600 flex-shrink-0 ml-2">
                   2025.08.21
                 </div>
               </div>
             </>
           )}
+        </div>
         </div>
       </div>
     </div>

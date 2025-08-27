@@ -12,11 +12,11 @@ interface RobotListProps {
 const getStatusBadgeStyle = (status: RobotStatus) => {
   switch (status) {
     case "수거 대상":
-      return "px-2 py-1.5 bg-sky-200 text-sky-600 text-xs font-bold rounded-[100px] max-sm:px-1.5 max-sm:py-1";
+      return "px-2 py-1.5 bg-sky-200 text-sky-600 text-xs font-bold rounded-[100px] max-sm:px-1.5 max-sm:py-1 hover:bg-sky-200 hover:text-sky-600";
     case "장애 발생":
-      return "px-2 py-1.5 bg-red-100 text-rose-600 text-xs font-bold rounded-[100px] max-sm:px-1.5 max-sm:py-1";
+      return "px-2 py-1.5 bg-red-100 text-rose-600 text-xs font-bold rounded-[100px] max-sm:px-1.5 max-sm:py-1 hover:bg-red-100 hover:text-rose-600";
     default:
-      return "px-2 py-1.5 bg-green-100 text-green-600 text-xs font-bold rounded-[100px] max-sm:px-1.5 max-sm:py-1";
+      return "px-2 py-1.5 bg-green-100 text-green-600 text-xs font-bold rounded-[100px] max-sm:px-1.5 max-sm:py-1 hover:bg-green-100 hover:text-green-600";
   }
 };
 
