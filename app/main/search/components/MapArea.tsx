@@ -1,12 +1,15 @@
 "use client";
 
+import Image from "next/image";
+
 export default function MapArea() {
   return (
     <div className="absolute inset-0 w-full h-full">
-      <img
+      <Image
         src="https://api.builder.io/api/v1/image/assets/TEMP/2a940d1891c9eb3c0c8b4fde16349db22b7e0270?width=853"
         alt="지도"
-        className="w-full h-full object-cover"
+        fill
+        className="object-cover"
       />
 
       <div className="inline-flex absolute gap-2.5 justify-center items-center px-3 py-0.5 bg-neutral-950 bg-opacity-60 h-[22px] left-[275px] rounded-[100px] top-[100px] w-[70px]">

@@ -26,7 +26,7 @@ export default async function ProtectedPage() {
 
       {/* Plant Image */}
       <div className="absolute top-[100px] right-[42px] z-10">
-        <Image src="/plant.svg" alt="plant" width={95.86} height={167.14} />
+        <Image src="/plant.svg" alt="plant" width={96} height={167} />
       </div>
 
       {/* Bottom Content - Main Text and Barcode */}

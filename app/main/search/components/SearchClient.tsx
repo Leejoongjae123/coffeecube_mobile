@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
+import Image from "next/image";
 import SearchModal from "@/components/SearchModal";
 import { RobotData } from "../types";
 import MapArea from "@/app/main/search/components/MapArea";
@@ -77,7 +78,6 @@ export default function SearchClient() {
 
   const minHeight = 120; // 최소 높이를 줄임 (핸들과 타이틀만 보이도록)
   const bottomNavbarHeight = 80; // Bottom Navbar 높이 (pb-20 = 80px)
-  const headerHeight = 80; // 상단 SearchInputButton 영역 높이를 줄임
   
   // windowHeight와 maxHeight 업데이트
   React.useEffect(() => {
@@ -174,7 +174,6 @@ export default function SearchClient() {
 
   // 상단 MapArea 높이를 바텀 시트 높이에 따라 동적으로 계산
   const containerHeight = windowHeight - bottomNavbarHeight;
-  const mapAreaHeight = containerHeight - bottomSheetHeight;
 
   return (
     <div 
@@ -197,7 +196,7 @@ export default function SearchClient() {
         style={{ bottom: `${bottomSheetHeight + 10}px` }}
       >
         <button className="flex items-center justify-center w-[40px] h-[40px] bg-gray-50 rounded-lg border border-gray-300 shadow-lg">
-          <img src="/mypoint.svg" width={16} height={16} alt="mypoint" />
+          <Image src="/mypoint.svg" width={16} height={16} alt="mypoint" />
         </button>
       </div>
 
