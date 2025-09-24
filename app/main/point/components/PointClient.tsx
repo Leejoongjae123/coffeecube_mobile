@@ -1,22 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import PointHeader from "./PointHeader";
 import PointTable from "./PointTable";
-import { PointRecord } from "../types";
-
-const pointHistory: PointRecord[] = [
-  { date: "25-01-15", earned: 500, used: 0 },
-  { date: "25-01-10", earned: 0, used: 200 },
-  { date: "25-01-08", earned: 300, used: 0 },
-  { date: "25-01-05", earned: 0, used: 150 },
-  { date: "25-01-03", earned: 750, used: 0 },
-  { date: "24-12-28", earned: 0, used: 300 },
-  { date: "24-12-25", earned: 1000, used: 0 },
-  { date: "24-12-20", earned: 0, used: 100 },
-  { date: "24-12-18", earned: 400, used: 0 },
-  { date: "24-12-15", earned: 0, used: 250 },
-  { date: "24-12-10", earned: 600, used: 0 },
-];
+import { PointRecord, PointApiResponse } from "../types";
 
 function calculateCumulativePoints(records: PointRecord[]) {
   let cumulative = 0;
@@ -27,16 +14,72 @@ function calculateCumulativePoints(records: PointRecord[]) {
 }
 
 export default function PointClient() {
+  const [pointHistory, setPointHistory] = useState<PointRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPointHistory = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/points");
+        const result: PointApiResponse = await response.json();
+
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setPointHistory(result.data);
+        }
+      } catch {
+        setError("포인트 내역을 불러오는데 실패했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPointHistory();
+  }, []);
+
   const dataWithTotal = calculateCumulativePoints(pointHistory);
+
+  if (loading) {
+    return (
+      <div className="flex relative flex-col items-start pb-9 bg-white h-full min-h-screen">
+        <PointHeader />
+        <div className="box-border flex flex-col gap-5 items-center justify-center p-5 w-full flex-1">
+          <div className="text-center text-gray-500">
+            포인트 내역을 불러오는 중...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex relative flex-col items-start pb-9 bg-white h-full min-h-screen">
+        <PointHeader />
+        <div className="box-border flex flex-col gap-5 items-center justify-center p-5 w-full flex-1">
+          <div className="text-center text-red-500">{error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex relative flex-col items-start pb-9 bg-white h-full min-h-screen">
       <PointHeader />
       <div className="box-border flex flex-col gap-5 items-start p-5 w-full flex-1">
-        <PointTable rows={dataWithTotal} />
+        {dataWithTotal.length === 0 ? (
+          <div className="flex items-center justify-center w-full py-10">
+            <div className="text-center text-gray-500">
+              포인트 내역이 없습니다.
+            </div>
+          </div>
+        ) : (
+          <PointTable rows={dataWithTotal} />
+        )}
       </div>
     </div>
   );
 }
-
-

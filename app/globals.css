@@ -66,3 +66,27 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* 네이버 지도 로고 및 축척 숨기기 */
+.naver-maps-logo,
+.naver-maps-attr,
+.naver-maps-scale,
+[title*="Naver"],
+[alt*="Naver"],
+[class*="naver-logo"],
+[class*="naver-attr"],
+[class*="naver-scale"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}

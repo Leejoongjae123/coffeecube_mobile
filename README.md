@@ -28,6 +28,7 @@
   - It just works!
 - supabase-ssr. A package to configure Supabase Auth to use cookies
 - Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
+- Naver Map API integration for real-time location services
 - Styling with [Tailwind CSS](https://tailwindcss.com)
 - Components with [shadcn/ui](https://ui.shadcn.com/)
 - Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
@@ -73,14 +74,16 @@ If you wish to just develop locally and not deploy to Vercel, [follow the steps 
    cd with-supabase-app
    ```
 
-4. Rename `.env.example` to `.env.local` and update the following:
+4. Create `.env.local` and update the following:
 
    ```
    NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
    NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
+   NEXT_PUBLIC_NAVER_MAP_CLIENT_ID=[INSERT NAVER MAP CLIENT ID]
    ```
 
-   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+   - `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+   - `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` can be obtained from [Naver Cloud Platform Console](https://www.ncloud.com/product/applicationService/maps)
 
 5. You can now run the Next.js local development server:
 

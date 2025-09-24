@@ -1,4 +1,4 @@
-export type TabKey = 'daily' | 'monthly';
+export type TabKey = "daily" | "monthly";
 
 export interface StatusRow {
   date: string;
@@ -7,4 +7,8 @@ export interface StatusRow {
   points: string;
 }
 
-
+export interface StatusApiResponse {
+  success: boolean;
+  data: StatusRow[];
+  error?: string;
+}
