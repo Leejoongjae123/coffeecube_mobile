@@ -8,11 +8,17 @@ interface EquipmentInfo {
   region_dong: string | null;
 }
 
+interface UserPoints {
+  points_earned: number;
+}
+
 interface InputRecord {
+  id: string;
   input_amount: number;
   input_date: string;
   robot_code: string;
   equipment_list: EquipmentInfo;
+  user_points: UserPoints;
 }
 
 export async function GET() {
@@ -37,6 +43,7 @@ export async function GET() {
       .from("input_records")
       .select(
         `
+        id,
         input_amount,
         input_date,
         robot_code,
@@ -44,11 +51,13 @@ export async function GET() {
           install_location,
           region_si,
           region_dong
+        ),
+        user_points!input_records_id_fkey(
+          points_earned
         )
       `
       )
       .eq("user_id", user.id)
-      .eq("input_type", "coffee_bean")
       .gte(
         "input_date",
         new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
@@ -64,7 +73,7 @@ export async function GET() {
       );
     }
 
-    // 일별로 그룹화하고 포인트 계산 (1kg = 50 포인트)
+    // 일별로 그룹화하고 실제 포인트 값 사용
     const dailyData =
       (inputRecords as unknown as InputRecord[])?.map((record) => ({
         date: new Date(record.input_date)
@@ -79,7 +88,7 @@ export async function GET() {
           record.equipment_list.region_dong || ""
         } ${record.equipment_list.install_location}`.trim(),
         amount: Number(record.input_amount).toFixed(1),
-        points: Math.round(Number(record.input_amount) * 50).toString(),
+        points: (record.user_points?.points_earned || 0).toString(),
       })) || [];
 
     return NextResponse.json({

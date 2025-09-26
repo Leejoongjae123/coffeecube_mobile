@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
-
+import LogOutButton from "./components/LogOutButton";
 export default async function ProtectedPage() {
   const supabase = await createClient();
 
@@ -10,6 +10,11 @@ export default async function ProtectedPage() {
   if (error || !data?.claims) {
     redirect("/auth/login");
   }
+  const logout = async () => {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+    redirect("/auth/login");
+  };
 
   return (
     <div className="flex relative flex-col px-6 py-8 h-[calc(100vh-76px)]">
@@ -20,8 +25,10 @@ export default async function ProtectedPage() {
       />
 
       {/* Logo */}
-      <div className="relative z-10">
+      <div className="relative z-10 w-[318px] h-[32px] flex justify-between items-center">
         <Image src="/logo2.svg" alt="logo" width={134} height={41} />
+        
+        <LogOutButton />
       </div>
 
       {/* Plant Image */}

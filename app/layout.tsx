@@ -8,11 +8,15 @@ const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : "http://localhost:3000";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
-};
+  export const metadata: Metadata = {
+    metadataBase: new URL(defaultUrl),
+    title: "Coffee Cube | 커피큐브",
+    description:
+      "커피박 기기 조회",
+    icons: {
+      icon: "/logo.svg",
+    },
+  };
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

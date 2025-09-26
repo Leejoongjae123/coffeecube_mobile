@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
@@ -10,89 +11,7 @@ import { useSearchStore } from "./store/useSearchStore";
 import { useCurrentLocation } from "./hooks/useCurrentLocation";
 import { Badge } from "@/components/ui/badge";
 
-// 네이버 지도 API 타입 정의
-interface NaverGeocodeResult {
-  x: string;
-  y: string;
-  roadAddress: string;
-  jibunAddress: string;
-}
-
-interface NaverGeocodeResponse {
-  v2: {
-    addresses: NaverGeocodeResult[];
-  };
-}
-
-interface NaverLatLng {
-  lat: () => number;
-  lng: () => number;
-}
-
-interface NaverMap {
-  setCenter: (position: NaverLatLng) => void;
-  getCenter: () => NaverLatLng;
-  setZoom: (zoom: number) => void;
-  getZoom: () => number;
-}
-
-interface NaverMarker {
-  setPosition: (position: NaverLatLng) => void;
-  getPosition: () => NaverLatLng;
-  setMap: (map: NaverMap | null) => void;
-}
-
-interface NaverMapOptions {
-  center: NaverLatLng;
-  zoom: number;
-  mapTypeControl?: boolean;
-  zoomControl?: boolean;
-}
-
-interface NaverMarkerOptions {
-  position: NaverLatLng;
-  map: NaverMap;
-  title?: string;
-  icon?:
-    | string
-    | {
-        content: string;
-        anchor: { x: number; y: number };
-      };
-}
-
-declare global {
-  interface Window {
-    naver: {
-      maps: {
-        Service: {
-          geocode: (
-            options: { query: string },
-            callback: (status: number, response: NaverGeocodeResponse) => void
-          ) => void;
-          reverseGeocode: (
-            options: { coords: NaverLatLng; orders?: string },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            callback: (status: number, response: any) => void
-          ) => void;
-          Status: {
-            OK: number;
-          };
-          OrderType: {
-            ADDR: string;
-            ROAD_ADDR: string;
-          };
-        };
-        LatLng: new (lat: number, lng: number) => NaverLatLng;
-        Map: new (element: HTMLElement, options: NaverMapOptions) => NaverMap;
-        Marker: new (options: NaverMarkerOptions) => NaverMarker;
-        Point: new (x: number, y: number) => { x: number; y: number };
-      };
-    };
-    naverMapLoaded: boolean;
-    naverGeocoderLoaded: boolean;
-  }
-}
+// 전역 타입은 훅 파일에 통일. 이 파일에서는 any 캐스팅으로 단순화
 
 export default function SearchClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -105,9 +24,13 @@ export default function SearchClient() {
   const [robots, setRobots] = useState<RobotData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [currentLocationMarker, setCurrentLocationMarker] =
-    useState<NaverMarker | null>(null);
-  const robotMarkersRef = useRef<NaverMarker[]>([]);
+  const [currentLocationMarker, setCurrentLocationMarker] = useState<
+    any | null
+  >(null);
+  const robotMarkersRef = useRef<any[]>([]);
+  const routePolylineRef = useRef<any | null>(null);
+  const startMarkerRef = useRef<any | null>(null);
+  const goalMarkerRef = useRef<any | null>(null);
 
   // useCurrentLocation hook 사용
   const { getCurrentLocation, isGettingLocation } = useCurrentLocation();
@@ -160,12 +83,14 @@ export default function SearchClient() {
   );
   const isDestinationSet = useSearchStore((state) => state.isDestinationSet);
   const routeInfo = useSearchStore((state) => state.routeInfo);
+  const routeData = useSearchStore((state) => state.routeData);
+  const isLoadingRoute = useSearchStore((state) => state.isLoadingRoute);
   const clearRoute = useSearchStore((state) => state.clearRoute);
   const clearSearchResults = useSearchStore(
     (state) => state.clearSearchResults
   );
   const bottomSheetRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<NaverMap | undefined>(undefined);
+  const mapRef = useRef<any | undefined>(undefined);
 
   // 주소 전처리 및 재시도 유틸리티
   const sanitizeAddress = useCallback((address: string) => {
@@ -242,10 +167,10 @@ export default function SearchClient() {
         resolve(null);
         return;
       }
-      window.naver.maps.Service.geocode(
+      (window as any).naver.maps.Service.geocode(
         { query },
-        (status: number, response: NaverGeocodeResponse) => {
-          if (status === window.naver.maps.Service.Status.OK) {
+        (status: number, response: any) => {
+          if (status === (window as any).naver.maps.Service.Status.OK) {
             const r = response.v2?.addresses?.[0];
             if (r && r.x && r.y) {
               resolve({ lat: parseFloat(r.y), lng: parseFloat(r.x) });
@@ -267,7 +192,11 @@ export default function SearchClient() {
       const currentLocationCoords =
         useSearchStore.getState().currentLocationCoords;
 
-      if (currentLocationCoords && mapRef.current && window.naver?.maps) {
+      if (
+        currentLocationCoords &&
+        mapRef.current &&
+        (window as any).naver?.maps
+      ) {
         const { latitude, longitude } = currentLocationCoords;
 
         // 기존 현재 위치 마커 제거
@@ -276,51 +205,59 @@ export default function SearchClient() {
         }
 
         // 새로운 위치로 지도 중심 이동
-        const newCenter = new window.naver.maps.LatLng(latitude, longitude);
+        const newCenter = new (window as any).naver.maps.LatLng(
+          latitude,
+          longitude
+        );
         mapRef.current.setCenter(newCenter);
         mapRef.current.setZoom(16); // 현재 위치에 맞는 적절한 줌 레벨
 
-        // 현재 위치에 특별한 마커 표시
-        const marker = new window.naver.maps.Marker({
+        // 현재 위치에 특별한 마커 표시 (dot + 라인 + badge)
+        const marker = new (window as any).naver.maps.Marker({
           position: newCenter,
           map: mapRef.current,
           title: "현재 위치",
           icon: {
             content: [
-              '<div style="',
-              "  width: 20px;",
-              "  height: 20px;",
-              "  background: #007bff;",
-              "  border: 3px solid white;",
-              "  border-radius: 50%;",
-              "  box-shadow: 0 2px 6px rgba(0,0,0,0.3);",
-              "  position: relative;",
-              '">',
+              '<div style="position: relative; width: 80px; height: 60px; display: flex; flex-direction: column; align-items: center;">',
+              // Badge (상단)
               '  <div style="',
-              "    width: 40px;",
-              "    height: 40px;",
-              "    background: rgba(0,123,255,0.2);",
+              "    background: #000000;",
+              "    border-radius: 12px;",
+              "    width: 52px;",
+              "    height: 22px;",
+              "    display: flex;",
+              "    align-items: center;",
+              "    justify-content: center;",
+              "    font-size: 11px;",
+              "    font-weight: 500;",
+              "    color: #ffffff;",
+              "    opacity: 0.6;",
+              "    white-space: nowrap;",
+              '  ">내 위치</div>',
+              // 세로 라인 (badge와 dot을 연결)
+              '  <div style="',
+              "    width: 2px;",
+              "    height: 22px;",
+              "    background: #6b7280;",
+              '  "></div>',
+              // Dot (하단) - 흰색 테두리 제거
+              '  <div style="',
+              "    width: 12px;",
+              "    height: 12px;",
+              "    background: #000000;",
               "    border-radius: 50%;",
-              "    position: absolute;",
-              "    top: -13px;",
-              "    left: -13px;",
-              "    animation: pulse 2s infinite;",
+              "    box-shadow: 0 2px 6px rgba(0,0,0,0.3);",
               '  "></div>',
               "</div>",
-              "<style>",
-              "  @keyframes pulse {",
-              "    0% { transform: scale(0.8); opacity: 1; }",
-              "    100% { transform: scale(2); opacity: 0; }",
-              "  }",
-              "</style>",
             ].join(""),
-            anchor: new window.naver.maps.Point(10, 10),
+            anchor: new (window as any).naver.maps.Point(40, 60), // 중앙 하단의 dot을 기준점으로
           },
         });
 
         setCurrentLocationMarker(marker);
       }
-    } catch (error) {
+    } catch {
       // 에러는 hook에서 처리됨
     }
   }, [getCurrentLocation, currentLocationMarker]);
@@ -341,18 +278,27 @@ export default function SearchClient() {
     robotMarkersRef.current.forEach((marker) => marker.setMap(null));
     robotMarkersRef.current = [];
 
+    // 경로 제거
+    if (routePolylineRef.current) {
+      routePolylineRef.current.setMap(null);
+      routePolylineRef.current = null;
+    }
+
     // 지도를 서울시청으로 이동하고 기본 줌 레벨로 설정
-    if (mapRef.current && window.naver?.maps) {
-      const defaultCenter = new window.naver.maps.LatLng(37.5665, 126.978); // 서울시청
+    if (mapRef.current && (window as any).naver?.maps) {
+      const defaultCenter = new (window as any).naver.maps.LatLng(
+        37.5665,
+        126.978
+      ); // 서울시청
       mapRef.current.setCenter(defaultCenter);
       mapRef.current.setZoom(15);
 
       // 로봇 마커들 다시 표시
-      const newMarkers: NaverMarker[] = [];
+      const newMarkers: any[] = [];
       robots.forEach((robot) => {
         if (robot.coordinates_y && robot.coordinates_x && mapRef.current) {
-          const marker = new window.naver.maps.Marker({
-            position: new window.naver.maps.LatLng(
+          const marker = new (window as any).naver.maps.Marker({
+            position: new (window as any).naver.maps.LatLng(
               parseFloat(robot.coordinates_y),
               parseFloat(robot.coordinates_x)
             ),
@@ -367,7 +313,11 @@ export default function SearchClient() {
 
   // 로봇 마커들을 생성하는 함수
   const createRobotMarkers = useCallback(() => {
-    if (!mapRef.current || !window.naver?.maps || robots.length === 0) {
+    if (
+      !mapRef.current ||
+      !(window as any).naver?.maps ||
+      robots.length === 0
+    ) {
       return;
     }
 
@@ -375,12 +325,12 @@ export default function SearchClient() {
     robotMarkersRef.current.forEach((marker) => marker.setMap(null));
 
     // 새로운 로봇 마커들 생성
-    const newMarkers: NaverMarker[] = [];
+    const newMarkers: any[] = [];
     robots.forEach((robot) => {
       if (robot.coordinates_y && robot.coordinates_x && mapRef.current) {
         const currentMap = mapRef.current;
-        const marker = new window.naver.maps.Marker({
-          position: new window.naver.maps.LatLng(
+        const marker = new (window as any).naver.maps.Marker({
+          position: new (window as any).naver.maps.LatLng(
             parseFloat(robot.coordinates_y),
             parseFloat(robot.coordinates_x)
           ),
@@ -395,7 +345,11 @@ export default function SearchClient() {
 
   useEffect(() => {
     const initializeMap = () => {
-      if (window.naverMapLoaded && window.naver && window.naver.maps) {
+      if (
+        (window as any).naverMapLoaded &&
+        (window as any).naver &&
+        (window as any).naver.maps
+      ) {
         const mapContainer = document.getElementById("myMap");
         if (mapContainer && !mapRef.current) {
           // 초기 지도 중심점 설정
@@ -409,7 +363,7 @@ export default function SearchClient() {
             selectedLocation.latitude &&
             selectedLocation.longitude
           ) {
-            centerCoordinates = new window.naver.maps.LatLng(
+            centerCoordinates = new (window as any).naver.maps.LatLng(
               selectedLocation.latitude,
               selectedLocation.longitude
             );
@@ -418,12 +372,15 @@ export default function SearchClient() {
             robots[0].coordinates_y &&
             robots[0].coordinates_x
           ) {
-            centerCoordinates = new window.naver.maps.LatLng(
+            centerCoordinates = new (window as any).naver.maps.LatLng(
               parseFloat(robots[0].coordinates_y),
               parseFloat(robots[0].coordinates_x)
             );
           } else {
-            centerCoordinates = new window.naver.maps.LatLng(37.5665, 126.978); // 기본값: 서울시청
+            centerCoordinates = new (window as any).naver.maps.LatLng(
+              37.5665,
+              126.978
+            ); // 기본값: 서울시청
           }
 
           const mapOptions = {
@@ -432,7 +389,10 @@ export default function SearchClient() {
             mapTypeControl: false,
             zoomControl: false,
           };
-          const map = new window.naver.maps.Map(mapContainer, mapOptions);
+          const map = new (window as any).naver.maps.Map(
+            mapContainer,
+            mapOptions
+          );
           mapRef.current = map;
         }
 
@@ -444,7 +404,7 @@ export default function SearchClient() {
     };
 
     // 네이버 지도 API가 이미 로드되었다면 즉시 초기화
-    if (window.naverMapLoaded) {
+    if ((window as any).naverMapLoaded) {
       initializeMap();
     } else {
       // 네이버 지도 API 로딩 완료를 기다림
@@ -452,10 +412,13 @@ export default function SearchClient() {
         initializeMap();
       };
 
-      window.addEventListener("naverMapReady", handleNaverMapReady);
+      (window as any).addEventListener("naverMapReady", handleNaverMapReady);
 
       return () => {
-        window.removeEventListener("naverMapReady", handleNaverMapReady);
+        (window as any).removeEventListener(
+          "naverMapReady",
+          handleNaverMapReady
+        );
       };
     }
   }, [robots, selectedLocation, createRobotMarkers]);
@@ -495,13 +458,13 @@ export default function SearchClient() {
           if (result && mapRef.current) {
             console.log("주소 검색 성공:", candidate);
             console.log(`위도: ${result.lat}, 경도: ${result.lng}`);
-            const newCenter = new window.naver.maps.LatLng(
+            const newCenter = new (window as any).naver.maps.LatLng(
               result.lat,
               result.lng
             );
             const currentMap = mapRef.current;
             currentMap.setCenter(newCenter);
-            new window.naver.maps.Marker({
+            new (window as any).naver.maps.Marker({
               position: newCenter,
               map: currentMap,
             });
@@ -512,16 +475,19 @@ export default function SearchClient() {
         console.log("모든 주소 후보에 대해 좌표 변환 실패");
       };
 
-      if (window.naverGeocoderLoaded) {
+      if ((window as any).naverGeocoderLoaded) {
         executeGeocode();
       } else {
         const handleNaverMapReady = () => {
           executeGeocode();
         };
-        window.addEventListener("naverMapReady", handleNaverMapReady);
+        (window as any).addEventListener("naverMapReady", handleNaverMapReady);
         return () => {
           isComponentMounted = false;
-          window.removeEventListener("naverMapReady", handleNaverMapReady);
+          (window as any).removeEventListener(
+            "naverMapReady",
+            handleNaverMapReady
+          );
         };
       }
 
@@ -675,6 +641,179 @@ export default function SearchClient() {
 
   // 초기 자동 위치 가져오기 제거 - 버튼 클릭 시에만 위치를 가져옵니다
 
+  // 경로 표시 Effect
+  React.useEffect(() => {
+    if (!mapRef.current || !routeData || !routeData.route?.traoptimal?.[0]) {
+      // 기존 경로가 있으면 제거
+      if (routePolylineRef.current) {
+        routePolylineRef.current.setMap(null);
+        routePolylineRef.current = null;
+      }
+      // 출발/도착 마커 제거
+      if (startMarkerRef.current) {
+        startMarkerRef.current.setMap(null);
+        startMarkerRef.current = null;
+      }
+      if (goalMarkerRef.current) {
+        goalMarkerRef.current.setMap(null);
+        goalMarkerRef.current = null;
+      }
+      return;
+    }
+
+    const routeInfo = routeData.route.traoptimal[0];
+    if (!routeInfo.path || routeInfo.path.length === 0) return;
+
+    // 경로 좌표를 네이버 지도 LatLng 객체로 변환
+    const path = routeInfo.path.map(
+      (coord) => new (window as any).naver.maps.LatLng(coord[1], coord[0]) // [경도, 위도] -> LatLng(위도, 경도)
+    );
+
+    // 기존 경로 제거
+    if (routePolylineRef.current) {
+      routePolylineRef.current.setMap(null);
+    }
+
+    // 새로운 경로 그리기
+    const polyline = new (window as any).naver.maps.Polyline({
+      map: mapRef.current,
+      path: path,
+      strokeColor: "#1A73E8", // 구글 맵 파란색
+      strokeWeight: 6,
+      strokeOpacity: 0.8,
+      strokeLineCap: "round",
+      strokeLineJoin: "round",
+    });
+
+    routePolylineRef.current = polyline;
+
+    // 출발/도착 마커 생성
+    try {
+      const startLoc = routeInfo.summary.start?.location; // [lng, lat]
+      const goalLoc = routeInfo.summary.goal?.location; // [lng, lat]
+
+      if (Array.isArray(startLoc) && startLoc.length === 2) {
+        const startLatLng = new (window as any).naver.maps.LatLng(
+          startLoc[1],
+          startLoc[0]
+        );
+        // 기존 마커 제거
+        if (startMarkerRef.current) {
+          startMarkerRef.current.setMap(null);
+        }
+        startMarkerRef.current = new (window as any).naver.maps.Marker({
+          position: startLatLng,
+          map: mapRef.current,
+          icon: {
+            content: [
+              '<div style="position: relative; width: 80px; height: 60px; display: flex; flex-direction: column; align-items: center;">',
+              // Badge (출발)
+              '  <div style="',
+              "    background: #000000;",
+              "    border-radius: 12px;",
+              "    width: 52px;",
+              "    height: 22px;",
+              "    display: flex;",
+              "    align-items: center;",
+              "    justify-content: center;",
+              "    font-size: 11px;",
+              "    font-weight: 500;",
+              "    color: #ffffff;",
+              "    opacity: 0.6;",
+              "    white-space: nowrap;",
+              '  ">출발</div>',
+              // 세로 라인
+              '  <div style="',
+              "    width: 2px;",
+              "    height: 22px;",
+              "    background: #6b7280;",
+              '  "></div>',
+              // Dot (하단)
+              '  <div style="',
+              "    width: 12px;",
+              "    height: 12px;",
+              "    background: #000000;",
+              "    border-radius: 50%;",
+              "    box-shadow: 0 2px 6px rgba(0,0,0,0.3);",
+              '  "></div>',
+              "</div>",
+            ].join(""),
+            anchor: new (window as any).naver.maps.Point(40, 60),
+          },
+          title: "출발",
+        });
+      }
+
+      if (Array.isArray(goalLoc) && goalLoc.length === 2) {
+        const goalLatLng = new (window as any).naver.maps.LatLng(
+          goalLoc[1],
+          goalLoc[0]
+        );
+        // 기존 마커 제거
+        if (goalMarkerRef.current) {
+          goalMarkerRef.current.setMap(null);
+        }
+        goalMarkerRef.current = new (window as any).naver.maps.Marker({
+          position: goalLatLng,
+          map: mapRef.current,
+          icon: {
+            content: [
+              '<div style="position: relative; width: 80px; height: 60px; display: flex; flex-direction: column; align-items: center;">',
+              // Badge (도착) - primary 색상
+              '  <div style="',
+              "    background: hsl(var(--primary));",
+              "    border-radius: 12px;",
+              "    width: 52px;",
+              "    height: 22px;",
+              "    display: flex;",
+              "    align-items: center;",
+              "    justify-content: center;",
+              "    font-size: 11px;",
+              "    font-weight: 500;",
+              "    color: #ffffff;",
+              "    opacity: 0.6;",
+              "    white-space: nowrap;",
+              '  ">도착</div>',
+              // 세로 라인
+              '  <div style="',
+              "    width: 2px;",
+              "    height: 22px;",
+              "    background: #6b7280;",
+              '  "></div>',
+              // Dot (하단) - primary 색상
+              '  <div style="',
+              "    width: 12px;",
+              "    height: 12px;",
+              "    background: hsl(var(--primary));",
+              "    border-radius: 50%;",
+              "    box-shadow: 0 2px 6px rgba(0,0,0,0.3);",
+              '  "></div>',
+              "</div>",
+            ].join(""),
+            anchor: new (window as any).naver.maps.Point(40, 60),
+          },
+          title: "도착",
+        });
+      }
+    } catch {}
+
+    // 경로가 모두 보이도록 지도 영역 조정
+    const bounds = new (window as any).naver.maps.LatLngBounds();
+    path.forEach((coord: any) => bounds.extend(coord));
+    mapRef.current.fitBounds(bounds, {
+      top: 150,
+      right: 50,
+      bottom: bottomSheetHeight + 100,
+      left: 50,
+    });
+
+    console.log("[SearchClient] 경로 표시 완료", {
+      거리: `${(routeInfo.summary.distance / 1000).toFixed(1)}km`,
+      시간: `${Math.round(routeInfo.summary.duration / 60000)}분`,
+      통행료: `${routeInfo.summary.tollFare}원`,
+    });
+  }, [routeData, bottomSheetHeight]);
+
   // 컴포넌트 언마운트 시 마커 정리
   React.useEffect(() => {
     return () => {
@@ -682,6 +821,15 @@ export default function SearchClient() {
         currentLocationMarker.setMap(null);
       }
       robotMarkersRef.current.forEach((marker) => marker.setMap(null));
+      if (routePolylineRef.current) {
+        routePolylineRef.current.setMap(null);
+      }
+      if (startMarkerRef.current) {
+        startMarkerRef.current.setMap(null);
+      }
+      if (goalMarkerRef.current) {
+        goalMarkerRef.current.setMap(null);
+      }
     };
   }, [currentLocationMarker]);
 
@@ -703,36 +851,78 @@ export default function SearchClient() {
 
       {/* 도착지가 설정된 경우 출발-도착 표시 */}
       {isDestinationSet && routeInfo && (
-        <div className="absolute left-5 z-10 top-[23px] max-md:inset-x-5 max-sm:inset-x-4 h-24 bg-white rounded-lg shadow-lg border border-gray-200 px-4 py-3 flex flex-col justify-between w-[316px]">
-          {/* 출발지 */}
-          <div className="flex items-center gap-3">
-            <Badge className="w-[34px] h-[24px] bg-[#D6D6D6] text-[#4E4E4E] text-[10px] rounded-[100px] flex items-center justify-center shadow-none px-1">
-              출발
-            </Badge>
-            <div className="text-sm text-gray-700 truncate flex-1">
-              {routeInfo.departure.address}
+        <div className="absolute left-5 z-10 top-[23px] max-md:inset-x-5 max-sm:inset-x-4 bg-white rounded-lg shadow-lg border border-gray-200 px-4 py-3 flex flex-col w-[316px]">
+          <div className="flex flex-col gap-2">
+            {/* 출발지 */}
+            <div className="flex items-center gap-3">
+              <Badge className="w-[34px] h-[24px] bg-[#D6D6D6] text-[#4E4E4E] text-[10px] rounded-[100px] flex items-center justify-center shadow-none px-1">
+                출발
+              </Badge>
+              <div className="text-sm text-gray-700 truncate flex-1">
+                {routeInfo.departure.address}
+              </div>
+              <Image
+                className="cursor-pointer"
+                src="/cancel.svg"
+                alt="cancel"
+                width={24}
+                height={24}
+                onClick={resetMapToInitialState}
+              />
             </div>
-            <Image
-              className="cursor-pointer"
-              src="/cancel.svg"
-              alt="cancel"
-              width={24}
-              height={24}
-              onClick={resetMapToInitialState}
-            />
-          </div>
 
-          {/* 구분선 */}
-          <div className="border-t border-[#D5D5D5] my-1"></div>
+            {/* 구분선 */}
+            <div className="border-t border-[#D5D5D5]"></div>
 
-          {/* 도착지 */}
-          <div className="flex items-center gap-3">
-            <Badge className="w-[34px] h-[24px] bg-primary text-white text-[10px] rounded-[100px] flex items-center justify-center shadow-none px-1">
-              도착
-            </Badge>
-            <div className="text-sm text-gray-700 truncate flex-1">
-              {routeInfo.destination.address}
+            {/* 도착지 */}
+            <div className="flex items-center gap-3">
+              <Badge className="w-[34px] h-[24px] bg-primary text-white text-[10px] rounded-[100px] flex items-center justify-center shadow-none px-1">
+                도착
+              </Badge>
+              <div className="text-sm text-gray-700 truncate flex-1">
+                {routeInfo.destination.address}
+              </div>
             </div>
+
+            {/* 경로 정보 */}
+            {routeData && routeData.route?.traoptimal?.[0] && (
+              <>
+                <div className="border-t border-[#D5D5D5]"></div>
+                <div className="flex justify-between items-center text-xs text-gray-600 pt-1">
+                  <span>
+                    거리:{" "}
+                    {(
+                      routeData.route.traoptimal[0].summary.distance / 1000
+                    ).toFixed(1)}
+                    km
+                  </span>
+                  <span>
+                    시간:{" "}
+                    {Math.round(
+                      routeData.route.traoptimal[0].summary.duration / 60000
+                    )}
+                    분
+                  </span>
+                  {routeData.route.traoptimal[0].summary.tollFare > 0 && (
+                    <span>
+                      통행료:{" "}
+                      {routeData.route.traoptimal[0].summary.tollFare.toLocaleString()}
+                      원
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* 로딩 중 표시 */}
+            {isLoadingRoute && (
+              <>
+                <div className="border-t border-[#D5D5D5]"></div>
+                <div className="text-xs text-gray-500 text-center py-1">
+                  경로 찾는 중...
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

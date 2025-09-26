@@ -78,8 +78,12 @@ export default function LoginClient() {
         </div>
 
         <div className="flex gap-3 justify-center items-center max-md:gap-2.5 max-sm:flex-wrap max-sm:gap-2">
-          <Link href="/auth/forgot-password" className="text-sm font-medium text-center text-green-600 cursor-pointer max-md:text-sm max-sm:text-xs hover:underline">
+          <Link href="/auth/find-id/phone" className="text-sm font-medium text-center text-green-600 cursor-pointer max-md:text-sm max-sm:text-xs hover:underline">
             아이디 찾기
+          </Link>
+          <div className="w-px h-3 bg-green-600"></div>
+          <Link href="/auth/find-password/phone" className="text-sm font-medium text-center text-green-600 cursor-pointer max-md:text-sm max-sm:text-xs hover:underline">
+            비밀번호 찾기
           </Link>
           <div className="w-px h-3 bg-green-600"></div>
           <Link href="/auth/signup/phone" className="text-sm font-medium text-center text-green-600 cursor-pointer max-md:text-sm max-sm:text-xs hover:underline">

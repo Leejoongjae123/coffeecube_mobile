@@ -8,11 +8,17 @@ interface EquipmentInfo {
   region_dong: string | null;
 }
 
+interface UserPoints {
+  points_earned: number;
+}
+
 interface InputRecord {
+  id: string;
   input_amount: number;
   input_date: string;
   robot_code: string;
   equipment_list: EquipmentInfo;
+  user_points: UserPoints;
 }
 
 export async function GET() {
@@ -37,6 +43,7 @@ export async function GET() {
       .from("input_records")
       .select(
         `
+        id,
         input_amount,
         input_date,
         robot_code,
@@ -44,11 +51,13 @@ export async function GET() {
           install_location,
           region_si,
           region_dong
+        ),
+        user_points!input_records_id_fkey(
+          points_earned
         )
       `
       )
       .eq("user_id", user.id)
-      .eq("input_type", "coffee_bean")
       .gte(
         "input_date",
         new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
@@ -88,9 +97,7 @@ export async function GET() {
 
       monthlyGroups[monthKey].amount += Number(record.input_amount);
       monthlyGroups[monthKey].locations.add(location);
-      monthlyGroups[monthKey].points += Math.round(
-        Number(record.input_amount) * 50
-      );
+      monthlyGroups[monthKey].points += record.user_points?.points_earned || 0;
     });
 
     // 월별 데이터 포맷팅

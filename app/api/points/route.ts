@@ -36,7 +36,7 @@ export async function GET() {
       .from("user_points")
       .select("*")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+      .order("earned_date", { ascending: false });
 
     if (pointsError) {
       return NextResponse.json(
@@ -45,10 +45,10 @@ export async function GET() {
       );
     }
 
-    // 날짜별로 그룹화하여 earned/used 값을 분리
+    // 날짜별로 그룹화하여 취득/차감/합계 값 계산
     const groupedByDate =
       pointsData?.reduce((acc, point) => {
-        const date = new Date(point.created_at)
+        const date = new Date(point.earned_date)
           .toLocaleDateString("ko-KR", {
             year: "2-digit",
             month: "2-digit",
@@ -61,22 +61,20 @@ export async function GET() {
           acc[date] = {
             date,
             earned: 0,
-            used: 0,
+            used: 0, // 현재 테이블에 차감 데이터가 없으므로 0으로 설정
             id: point.id,
             user_id: point.user_id,
             points: 0,
-            transaction_type: point.transaction_type,
-            description: point.description,
+            transaction_type: "earned", // 모든 포인트가 취득 포인트
+            description: point.points_source,
             created_at: point.created_at,
           };
         }
 
-        if (point.transaction_type === "earned") {
-          acc[date].earned += point.points;
-        } else if (point.transaction_type === "used") {
-          acc[date].used += point.points;
-        }
+        // 모든 포인트는 취득 포인트 (points_earned 필드)
+        acc[date].earned += point.points_earned;
 
+        // 현재는 차감 데이터가 없으므로 취득 포인트 = 합계 포인트
         acc[date].points = acc[date].earned - acc[date].used;
 
         return acc;

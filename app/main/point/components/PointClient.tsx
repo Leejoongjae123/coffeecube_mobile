@@ -6,11 +6,23 @@ import PointTable from "./PointTable";
 import { PointRecord, PointApiResponse } from "../types";
 
 function calculateCumulativePoints(records: PointRecord[]) {
+  // 날짜 오름차순으로 정렬 (오래된 날짜부터)
+  const sortedRecords = [...records].sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+
   let cumulative = 0;
-  return records.map((point) => {
+  const recordsWithTotal = sortedRecords.map((point) => {
     cumulative += point.earned - point.used;
     return { ...point, total: cumulative };
   });
+
+  // 최종 결과는 최신순으로 다시 정렬해서 반환 (화면 표시용)
+  return recordsWithTotal.sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 }
 
 export default function PointClient() {

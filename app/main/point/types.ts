@@ -1,13 +1,13 @@
 export interface PointRecord {
-  id?: number;
-  user_id?: string;
-  points: number;
+  id: string;
+  user_id: string;
+  points: number; // 합계값 (earned - used)
   transaction_type: "earned" | "used";
-  description?: string;
+  description: string; // points_source
   created_at: string;
-  date: string;
-  earned: number;
-  used: number;
+  date: string; // earned_date에서 변환된 날짜 문자열
+  earned: number; // 일자별 취득 포인트 합계
+  used: number; // 일자별 차감 포인트 합계 (현재는 0)
 }
 
 export interface PointRow extends PointRecord {

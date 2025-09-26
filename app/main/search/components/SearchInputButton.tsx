@@ -39,7 +39,7 @@ export default function SearchInputButton({ onOpen }: SearchInputButtonProps) {
             src={
               selectedLocation
                 ? "/search_address_green.svg"
-                : "/search_address.svg"
+                : "/search_address_green.svg"
             }
             alt="search"
             width={18}

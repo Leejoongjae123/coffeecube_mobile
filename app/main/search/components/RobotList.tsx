@@ -26,12 +26,21 @@ export default function RobotList({ robots }: RobotListProps) {
   const setDestination = useSearchStore((state) => state.setDestination);
   const setDeparture = useSearchStore((state) => state.setDeparture);
   const currentCoords = useSearchStore((state) => state.currentLocationCoords);
+  const fetchRoute = useSearchStore((state) => state.fetchRoute);
   const { getCurrentLocation, isGettingLocation, reverseGeocode } =
     useCurrentLocation();
 
   const handleSetDestination = async (robot: RobotData) => {
+    console.log("[RobotList] handleSetDestination start", {
+      robotId: robot.id,
+      robotCode: robot.code,
+      coordinates_x: robot.coordinates_x,
+      coordinates_y: robot.coordinates_y,
+    });
+
     // 1) 현재 위치 확보 (좌표 저장됨)
     await getCurrentLocation();
+    console.log("[RobotList] after getCurrentLocation");
 
     // 2) 저장된 좌표 기준으로 역지오코딩하여 출발지 주소를 도로명으로 보장
     const coords =
@@ -42,7 +51,9 @@ export default function RobotList({ robots }: RobotListProps) {
       typeof coords.latitude === "number" &&
       typeof coords.longitude === "number"
     ) {
+      console.log("[RobotList] coords for reverseGeocode:", coords);
       const addr = await reverseGeocode(coords.latitude, coords.longitude);
+      console.log("[RobotList] reverseGeocode result:", addr);
       departureAddress = addr || "내 위치";
       // 출발지 주소 및 좌표 동기화
       setDeparture({
@@ -50,16 +61,52 @@ export default function RobotList({ robots }: RobotListProps) {
         latitude: coords.latitude,
         longitude: coords.longitude,
       });
+      console.log("[RobotList] setDeparture committed", {
+        address: departureAddress,
+        lat: coords.latitude,
+        lng: coords.longitude,
+      });
     }
 
-    // 3) 도착지 설정 - install_location_raw 우선, 없으면 address 사용
+    // 3) 도착지 설정 - 좌표 파싱 및 검증
+    const robotLatitude = robot.coordinates_y
+      ? parseFloat(robot.coordinates_y)
+      : robot.latitude;
+    const robotLongitude = robot.coordinates_x
+      ? parseFloat(robot.coordinates_x)
+      : robot.longitude;
+
+    console.log("[RobotList] robot coordinates", {
+      coordinates_x: robot.coordinates_x,
+      coordinates_y: robot.coordinates_y,
+      parsed_longitude: robotLongitude,
+      parsed_latitude: robotLatitude,
+      original_latitude: robot.latitude,
+      original_longitude: robot.longitude,
+    });
+
+    if (!robotLatitude || !robotLongitude) {
+      console.error("[RobotList] 로봇 좌표 정보가 없습니다:", robot);
+      alert("해당 위치의 좌표 정보가 없어 길찾기를 할 수 없습니다.");
+      return;
+    }
+
     setDestination({
       id: robot.id,
       code: robot.code,
       address: robot.install_location_raw || robot.address,
-      latitude: robot.latitude,
-      longitude: robot.longitude,
+      latitude: robotLatitude,
+      longitude: robotLongitude,
     });
+    console.log("[RobotList] setDestination committed", {
+      id: robot.id,
+      code: robot.code,
+      address: robot.install_location_raw || robot.address,
+    });
+
+    // 4) 경로 찾기 시작
+    console.log("[RobotList] 경로 찾기 시작");
+    await fetchRoute();
   };
 
   return (
