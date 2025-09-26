@@ -217,9 +217,7 @@ function AccountClientContent({
           </div>
           <div className="flex-1 flex flex-col justify-center items-center p-5">
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl text-green-500">✓</span>
-              </div>
+
               <div className="text-lg font-semibold text-neutral-700 mb-2">
                 비밀번호가 성공적으로 변경되었습니다
               </div>
