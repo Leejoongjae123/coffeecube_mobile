@@ -16,12 +16,6 @@ interface InputRecord {
   equipment_list: EquipmentInfo;
 }
 
-interface UserPoints {
-  id: string;
-  points_earned: number;
-  source_reference_id: string;
-}
-
 interface InputRecordWithPoints extends InputRecord {
   points_earned: number;
 }
@@ -93,7 +87,7 @@ export async function GET() {
 
     // input_records와 user_points를 manual JOIN
     const recordsWithPoints: InputRecordWithPoints[] =
-      inputRecords?.map((record) => {
+      (inputRecords as unknown as InputRecord[])?.map((record) => {
         const pointData = userPoints?.find(
           (point) => point.source_reference_id === record.id
         );
