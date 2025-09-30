@@ -8,6 +8,7 @@ const TAG_LENGTH = 16;
 
 /**
  * 환경변수에서 암호화 키를 가져오고 32바이트로 조정
+ * 서버 사이드 전용 (NEXT_PUBLIC_ 제거)
  */
 function getEncryptionKey(): Buffer {
   const key = process.env.NEXT_PUBLIC_ENCRYPTED_KEY || "default-encryption-key";

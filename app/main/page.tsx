@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import LogOutButton from "./components/LogOutButton";
+import BarcodeImage from "./components/BarcodeImage";
 export default async function ProtectedPage() {
   const supabase = await createClient();
 
@@ -10,24 +11,16 @@ export default async function ProtectedPage() {
   if (error || !data?.claims) {
     redirect("/auth/login");
   }
-  const logout = async () => {
-    const supabase = await createClient();
-    await supabase.auth.signOut();
-    redirect("/auth/login");
-  };
 
   return (
     <div className="flex relative flex-col px-6 py-8 h-[calc(100vh-76px)]">
       {/* Background Image */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-[#BFDEC1]"
-       
-      />
+      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-[#BFDEC1]" />
 
       {/* Logo */}
       <div className="relative z-10 w-[318px] h-[32px] flex justify-between items-center">
         <Image src="/logo2.svg" alt="logo" width={134} height={41} />
-        
+
         <LogOutButton />
       </div>
 
@@ -54,8 +47,10 @@ export default async function ProtectedPage() {
 
         {/* Barcode Card */}
         <Card className="p-5 text-base text-black bg-white rounded-xl shadow-[0px_0px_10px_rgba(0,0,0,0.12)] border-0">
-          <div className="text-[16px] font-bold text-left text-black mb-[18px]">로그인 바코드</div>
-          <Image src="/barcode.png" alt="barcode" width={281} height={50} />
+          <div className="text-[16px] font-bold text-left text-black mb-[18px]">
+            로그인 바코드
+          </div>
+          <BarcodeImage />
         </Card>
       </div>
     </div>

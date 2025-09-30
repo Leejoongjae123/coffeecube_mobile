@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// Supabase 조인 데이터 타입 정의
+// Supabase 데이터 타입 정의
 interface EquipmentInfo {
   install_location: string;
   region_si: string;
   region_dong: string | null;
-}
-
-interface UserPoints {
-  points_earned: number;
 }
 
 interface InputRecord {
@@ -18,7 +14,16 @@ interface InputRecord {
   input_date: string;
   robot_code: string;
   equipment_list: EquipmentInfo;
-  user_points: UserPoints;
+}
+
+interface UserPoints {
+  id: string;
+  points_earned: number;
+  source_reference_id: string;
+}
+
+interface InputRecordWithPoints extends InputRecord {
+  points_earned: number;
 }
 
 export async function GET() {
@@ -39,7 +44,7 @@ export async function GET() {
     }
 
     // 월별 수거량 데이터 조회 (최근 12개월)
-    const { data: inputRecords, error } = await supabase
+    const { data: inputRecords, error: inputError } = await supabase
       .from("input_records")
       .select(
         `
@@ -51,9 +56,6 @@ export async function GET() {
           install_location,
           region_si,
           region_dong
-        ),
-        user_points!input_records_id_fkey(
-          points_earned
         )
       `
       )
@@ -66,19 +68,47 @@ export async function GET() {
       )
       .order("input_date", { ascending: false });
 
-    if (error) {
+    if (inputError) {
       return NextResponse.json(
-        { error: "데이터를 가져오는 중 오류가 발생했습니다." },
+        { error: "입력 기록 데이터를 가져오는 중 오류가 발생했습니다." },
         { status: 500 }
       );
     }
+
+    // input_records ID 목록 추출
+    const inputRecordIds = inputRecords?.map((record) => record.id) || [];
+
+    // 해당 input_records에 대응하는 user_points 조회
+    const { data: userPoints, error: pointsError } = await supabase
+      .from("user_points")
+      .select("id, points_earned, source_reference_id")
+      .in("source_reference_id", inputRecordIds);
+
+    if (pointsError) {
+      return NextResponse.json(
+        { error: "포인트 데이터를 가져오는 중 오류가 발생했습니다." },
+        { status: 500 }
+      );
+    }
+
+    // input_records와 user_points를 manual JOIN
+    const recordsWithPoints: InputRecordWithPoints[] =
+      inputRecords?.map((record) => {
+        const pointData = userPoints?.find(
+          (point) => point.source_reference_id === record.id
+        );
+        return {
+          ...record,
+          points_earned: pointData?.points_earned || 0,
+        };
+      }) || [];
 
     // 월별로 그룹화
     const monthlyGroups: {
       [key: string]: { amount: number; locations: Set<string>; points: number };
     } = {};
 
-    (inputRecords as unknown as InputRecord[])?.forEach((record) => {
+    recordsWithPoints.forEach((record) => {
       const date = new Date(record.input_date);
       const monthKey = `${date.getFullYear().toString().slice(-2)}-${(
         date.getMonth() + 1
@@ -97,7 +127,7 @@ export async function GET() {
 
       monthlyGroups[monthKey].amount += Number(record.input_amount);
       monthlyGroups[monthKey].locations.add(location);
-      monthlyGroups[monthKey].points += record.user_points?.points_earned || 0;
+      monthlyGroups[monthKey].points += record.points_earned;
     });
 
     // 월별 데이터 포맷팅
