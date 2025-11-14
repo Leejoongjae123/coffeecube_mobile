@@ -54,14 +54,25 @@ export async function GET() {
     // 암호화된 비밀번호 복호화
     const decryptedPassword = decryptPassword(profile.encrypted_password);
 
-    // 바코드 데이터 생성 (email + 탭 + 복호화된 password)
-    const barcodeData = `${profile.email}\t${decryptedPassword}`;
-
     // 디버깅용 로그 - email과 decrypted password 출력
     console.log("=== 바코드 데이터 디버깅 ===");
     console.log("📧 Email:", profile.email);
     console.log("🔐 Encrypted Password:", profile.encrypted_password);
     console.log("🔓 Decrypted Password:", decryptedPassword);
+    console.log("📏 Decrypted Password Length:", decryptedPassword.length);
+
+    // 복호화 실패 체크
+    if (!decryptedPassword || decryptedPassword.length === 0) {
+      console.log("❌ 비밀번호 복호화 실패!");
+      console.log("💡 환경변수 NEXT_PUBLIC_ENCRYPTED_KEY 확인 필요");
+      return NextResponse.json(
+        { error: "Password decryption failed" },
+        { status: 500 }
+      );
+    }
+
+    // 바코드 데이터 생성 (email + 탭 + 복호화된 password)
+    const barcodeData = `${profile.email}\t${decryptedPassword}`;
     console.log("📊 Final Barcode Data:", barcodeData);
     console.log("📏 Barcode Data Length:", barcodeData.length);
     console.log("==========================");
