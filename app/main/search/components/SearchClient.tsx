@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
@@ -37,27 +36,76 @@ export default function SearchClient() {
 
   // 네이버 지도 로고/축척 숨기기
   useEffect(() => {
+    // CSS로 네이버 지도 요소 숨기기
+    const style = document.createElement("style");
+    style.innerHTML = `
+      .naver-maps-logo,
+      .naver-maps-attr,
+      .naver-maps-scale,
+      .naver-maps-control,
+      .naver-maps-control-scale,
+      .naver-maps-logo-area,
+      .naver-maps-attr-area,
+      [class*="naver-maps-logo"],
+      [class*="naver-maps-attr"],
+      [class*="naver-maps-scale"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+
     const hideNaverMapElements = () => {
       // 네이버 로고 숨기기
       const logoElements = document.querySelectorAll(
-        ".naver-maps-logo, .naver-maps-attr"
+        ".naver-maps-logo, .naver-maps-attr, .naver-maps-logo-area, .naver-maps-attr-area"
       );
       logoElements.forEach((element) => {
         (element as HTMLElement).style.display = "none";
+        (element as HTMLElement).style.visibility = "hidden";
+        (element as HTMLElement).style.opacity = "0";
       });
 
       // 축척 숨기기
-      const scaleElements = document.querySelectorAll(".naver-maps-scale");
+      const scaleElements = document.querySelectorAll(
+        ".naver-maps-scale, .naver-maps-control-scale"
+      );
       scaleElements.forEach((element) => {
         (element as HTMLElement).style.display = "none";
+        (element as HTMLElement).style.visibility = "hidden";
+        (element as HTMLElement).style.opacity = "0";
       });
 
       // Naver Corp 텍스트 숨기기
       const corpElements = document.querySelectorAll(
-        '[title*="Naver"], [alt*="Naver"]'
+        '[title*="Naver"], [alt*="Naver"], [title*="NAVER"], [alt*="NAVER"]'
       );
       corpElements.forEach((element) => {
         (element as HTMLElement).style.display = "none";
+        (element as HTMLElement).style.visibility = "hidden";
+        (element as HTMLElement).style.opacity = "0";
+      });
+
+      // div 내부의 모든 a 태그와 img 태그 중 네이버 관련 요소 숨기기
+      const allLinks = document.querySelectorAll("#myMap a, #myMap img");
+      allLinks.forEach((element) => {
+        const href = (element as HTMLAnchorElement).href;
+        const src = (element as HTMLImageElement).src;
+        const alt = (element as HTMLImageElement).alt;
+        const title = element.getAttribute("title");
+
+        if (
+          href?.includes("naver") ||
+          src?.includes("naver") ||
+          alt?.toLowerCase().includes("naver") ||
+          title?.toLowerCase().includes("naver")
+        ) {
+          (element as HTMLElement).style.display = "none";
+          (element as HTMLElement).style.visibility = "hidden";
+          (element as HTMLElement).style.opacity = "0";
+        }
       });
     };
 
@@ -72,6 +120,7 @@ export default function SearchClient() {
     return () => {
       clearInterval(timer);
       clearTimeout(cleanup);
+      document.head.removeChild(style);
     };
   }, []);
 
@@ -388,6 +437,12 @@ export default function SearchClient() {
             zoom: 15,
             mapTypeControl: false,
             zoomControl: false,
+            scaleControl: false,
+            logoControl: false,
+            mapDataControl: false,
+            logoControlOptions: {
+              position: (window as any).naver.maps.Position.BOTTOM_LEFT,
+            },
           };
           const map = new (window as any).naver.maps.Map(
             mapContainer,
