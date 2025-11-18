@@ -95,6 +95,7 @@ export default function PhoneClient() {
 
     setIsLoading(true);
     try {
+      console.log("[Client] SMS 발송 요청:", phoneNumber);
       const response = await fetch("/api/sms/send", {
         method: "POST",
         headers: {
@@ -106,6 +107,7 @@ export default function PhoneClient() {
       });
 
       const result = await response.json();
+      console.log("[Client] SMS 발송 응답:", result);
 
       if (result.success) {
         setIsCodeSent(true);
@@ -117,13 +119,16 @@ export default function PhoneClient() {
           message: "인증번호가 발송되었습니다.",
         });
       } else {
+        const errorDetail = result.error ? `\n상세: ${result.error}` : "";
         setModalState({
           isOpen: true,
           title: "발송 실패",
-          message: result.message || "문자 발송에 실패했습니다.",
+          message:
+            (result.message || "문자 발송에 실패했습니다.") + errorDetail,
         });
       }
-    } catch {
+    } catch (error) {
+      console.error("[Client] SMS 발송 예외:", error);
       setModalState({
         isOpen: true,
         title: "오류",
